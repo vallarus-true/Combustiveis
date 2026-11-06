@@ -1,0 +1,30 @@
+name: Raspador Diário Mille
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  executar_robo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Puxar repositório
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Instalar biblioteca
+        run: pip install requests
+      - name: Ligar Robô
+        run: python robo_raspador.py
+      - name: Gravar dados JSON
+        run: |
+          git config --global user.name "Robo Mille"
+          git config --global user.email "acoes@github.com"
+          git add precos_juquitiba.json
+          git commit -m "Actualização de preços" || echo "Sem alterações"
+          git push
