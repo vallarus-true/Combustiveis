@@ -1,0 +1,20 @@
+{
+    "ultima_atualizacao": "06-11-2026 16:39:20",
+    "postos": [
+        {
+            "nome": "Posto 68 (BR 116)",
+            "gasolina": 6.79,
+            "etanol": 4.7
+        },
+        {
+            "nome": "Posto Shell (Centro)",
+            "gasolina": 6.85,
+            "etanol": 4.9
+        },
+        {
+            "nome": "Posto BR Petrobras",
+            "gasolina": 6.75,
+            "etanol": 4.8
+        }
+    ]
+}
