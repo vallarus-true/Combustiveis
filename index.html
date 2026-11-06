@@ -9,62 +9,116 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-gray-900 text-white p-2 md:p-4">
+<body class="bg-gray-900 text-white min-h-screen font-sans">
     <div id="root"></div>
     <script type="text/babel">
         function App() {
             const [postos, setPostos] = React.useState([]);
-            const [atualizacao, setAtualizacao] = React.useState("");
+            const [modoMille, setModoMille] = React.useState(true);
+            const [atualizacao, setAtualizacao] = React.useState('');
 
             React.useEffect(() => {
-                const puxarDados = async () => {
-                    try {
-                        const url = `https://raw.githubusercontent.com/vallarus-true/Combustiveis/main/precos_juquitiba.json?t=${new Date().getTime()}`;
-                        const resposta = await fetch(url);
-                        if (!resposta.ok) throw new Error('Falha na rede');
-                        const dados = await resposta.json();
-                        setPostos(dados.postos);
-                        setAtualizacao(dados.ultima_atualizacao);
-                    } catch (erro) {
-                        console.error("Erro:", erro);
-                    }
-                };
-                puxarDados();
+                fetch(`https://raw.githubusercontent.com/vallarus-true/Combustiveis/main/precos_juquitiba.json?t=${Date.now()}`)
+                    .then(r => r.json())
+                    .then(d => {
+                        setPostos(d.postos);
+                        setAtualizacao(d.ultima_atualizacao);
+                    }).catch(console.error);
             }, []);
 
+            const processados = postos.map(p => {
+                const fator = modoMille ? 0.71 : 0.70;
+                const tetoEtanol = p.gasolina * fator;
+                const etanolVence = p.etanol <= tetoEtanol;
+                const custoKmGasolina = p.gasolina / 12.4;
+                const custoKmEtanol = p.etanol / 8.8;
+                const menorCustoKm = modoMille ? Math.min(custoKmGasolina, custoKmEtanol) : 0;
+                const dist = p.distancia_km !== undefined ? p.distancia_km : 999;
+                return { ...p, tetoEtanol, etanolVence, menorCustoKm, dist };
+            });
+
+            if (processados.length === 0) return <p className="text-center text-gray-500 py-10">Buscando inteligência de dados...</p>;
+
+            const campeao = [...processados].sort((a, b) => a.menorCustoKm - b.menorCustoKm)[0];
+            const listaPorDistancia = [...processados].sort((a, b) => a.dist - b.dist);
+
             return (
-                <div class="max-w-md mx-auto bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700 mt-4">
-                    <div class="bg-green-600 p-4 text-center">
-                        <h1 class="text-2xl font-bold">Abastece Juquitiba</h1>
-                        <p class="text-sm opacity-90 mt-1">Modo Mille 2008 (71% Paridade)</p>
+                <div className="max-w-md mx-auto bg-gray-900 min-h-screen pb-10">
+                    <div className="bg-indigo-700 text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-10">
+                        <h1 className="text-xl font-bold tracking-wide">⛽ Abastece Juquitiba</h1>
+                        <span className="text-xs bg-indigo-900 px-2 py-1 rounded">Eixo Régis/Rodoanel/SP</span>
                     </div>
                     
-                    <div class="p-4">
-                        {postos.length === 0 ? (
-                            <p class="text-center text-gray-400">Carregando dados do robô...</p>
-                        ) : (
-                            postos.map((posto, index) => {
-                                const tetoEtanol = (posto.gasolina * 0.71).toFixed(2);
-                                const compensaEtanol = posto.etanol <= tetoEtanol;
+                    <div className="p-4 space-y-5">
+                        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center shadow">
+                            <div>
+                                <h3 className="font-bold text-gray-200">Perfil do Veículo</h3>
+                                <p className="text-xs text-gray-400 mt-1">Cálculo Uno Mille 2008 (71%)</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked={modoMille} onChange={e => setModoMille(e.target.checked)} className="sr-only peer" />
+                                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                            </label>
+                        </div>
+
+                        {campeao && modoMille && (
+                            <div className="bg-emerald-600 rounded-xl p-5 shadow-lg border border-emerald-500">
+                                <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-wider mb-1">🔥 Melhor Custo/Benefício da Rota</p>
+                                <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">
+                                    Vá de {campeao.etanolVence ? 'Etanol' : 'Gasolina'}!
+                                </h2>
+                                <p className="text-emerald-50 text-sm mb-1">
+                                    No <span className="font-bold">{campeao.nome}</span>
+                                </p>
+                                <p className="text-xs text-emerald-200 mb-3">{campeao.cidade}</p>
+                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-emerald-500/50">
+                                    <div className="bg-emerald-800/80 rounded px-2 py-1 text-xs text-emerald-100 font-medium">
+                                        R$ {campeao.menorCustoKm.toFixed(3)} / KM
+                                    </div>
+                                    <div className="text-xs text-emerald-100 font-bold">
+                                        📍 a {campeao.dist} km de Juquitiba
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="border-b border-gray-700 pb-2">
+                            <h3 className="font-bold text-gray-300 text-sm uppercase tracking-wider">Postos por Proximidade (Marco Zero)</h3>
+                        </div>
+
+                        {listaPorDistancia.map((p, i) => (
+                            <div key={i} className={`bg-gray-800 rounded-xl p-4 border shadow-sm relative overflow-hidden ${p.nome === campeao.nome ? 'border-yellow-600/50' : 'border-gray-700'}`}>
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 className="font-bold text-gray-100 text-base">{p.nome}</h4>
+                                        <div className="text-xs text-indigo-400 font-semibold">{p.cidade}</div>
+                                    </div>
+                                    {p.nome === campeao.nome && <span className="bg-yellow-600/20 text-yellow-500 text-[10px] px-2 py-1 rounded font-bold border border-yellow-600/30">CAMPEÃO</span>}
+                                </div>
+                                <div className="text-xs text-gray-400 mb-3">Distância: <strong className="text-gray-200">{p.dist === 0 ? 'Juquitiba (Centro)' : `${p.dist} km`}</strong></div>
                                 
-                                return (
-                                    <div key={index} class="mb-4 bg-gray-700 p-3 rounded-lg border border-gray-600">
-                                        <h2 class="text-xl font-bold text-yellow-400 mb-2">{posto.nome}</h2>
-                                        <div class="flex justify-between mb-1">
-                                            <span>Gasolina:</span> <span class="font-bold">R$ {posto.gasolina.toFixed(2)}</span>
-                                        </div>
-                                        <div class="flex justify-between mb-2">
-                                            <span>Etanol:</span> <span class="font-bold">R$ {posto.etanol.toFixed(2)}</span>
-                                        </div>
-                                        <div class={`p-2 rounded mt-2 text-center font-bold ${compensaEtanol ? 'bg-green-700 text-white' : 'bg-red-900 text-red-200'}`}>
-                                            {compensaEtanol ? 'VANTAGEM: ETANOL' : 'VANTAGEM: GASOLINA'}
-                                            <div class="text-xs font-normal mt-1">Teto matemático do Etanol aqui: R$ {tetoEtanol}</div>
+                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                    <div className="bg-gray-900/50 p-2 rounded-lg border border-gray-700/50">
+                                        <div className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider">Gasolina</div>
+                                        <div className="font-bold text-base text-gray-100">R$ {p.gasolina.toFixed(2)}</div>
+                                    </div>
+                                    <div className="bg-gray-900/50 p-2 rounded-lg border border-gray-700/50">
+                                        <div className="text-[10px] text-gray-400 mb-1 uppercase tracking-wider">Etanol</div>
+                                        <div className="font-bold text-base text-gray-100">R$ {p.etanol.toFixed(2)}</div>
+                                    </div>
+                                </div>
+
+                                {modoMille && (
+                                    <div className={`p-2 rounded-lg text-xs font-medium border ${p.etanolVence ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/50' : 'bg-gray-700/30 text-gray-300 border-gray-600/50'}`}>
+                                        <div className="flex justify-between items-center">
+                                            <span>✓ {p.etanolVence ? 'Etanol compensa' : 'Gasolina compensa'}</span>
+                                            <span className="opacity-70">Teto: R$ {p.tetoEtanol.toFixed(2)}</span>
                                         </div>
                                     </div>
-                                );
-                            })
-                        )}
-                        <p class="text-center text-xs text-gray-500 mt-4">Última leitura: {atualizacao}</p>
+                                )}
+                            </div>
+                        ))}
+                        <p className="text-center text-[10px] text-gray-600 mt-6">Última extração: {atualizacao}</p>
                     </div>
                 </div>
             );
