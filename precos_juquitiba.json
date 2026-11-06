@@ -1,20 +1,61 @@
 {
-    "ultima_atualizacao": "06-11-2026 16:39:20",
+    "ultima_atualizacao": "06-11-2026 18:11:18",
     "postos": [
         {
             "nome": "Posto 68 (BR 116)",
+            "cidade": "Juquitiba",
+            "distancia_km": 5,
             "gasolina": 6.79,
             "etanol": 4.7
         },
         {
             "nome": "Posto Shell (Centro)",
+            "cidade": "Juquitiba",
+            "distancia_km": 0,
             "gasolina": 6.85,
             "etanol": 4.9
         },
         {
-            "nome": "Posto BR Petrobras",
-            "gasolina": 6.75,
-            "etanol": 4.8
+            "nome": "Posto BR Petrobras (Régis)",
+            "cidade": "São Lourenço da Serra",
+            "distancia_km": 15,
+            "gasolina": 6.72,
+            "etanol": 4.65
+        },
+        {
+            "nome": "Posto Ipiranga (Acesso Rodoanel)",
+            "cidade": "Embu das Artes",
+            "distancia_km": 32,
+            "gasolina": 6.65,
+            "etanol": 4.5
+        },
+        {
+            "nome": "Posto Graal (Saída Raposo)",
+            "cidade": "Cotia / Rodoanel",
+            "distancia_km": 42,
+            "gasolina": 6.59,
+            "etanol": 4.45
+        },
+        {
+            "nome": "Shell Select (Marginal / Brooklin)",
+            "cidade": "São Paulo (Brooklin - R. Palmares)",
+            "distancia_km": 58,
+            "gasolina": 6.89,
+            "etanol": 4.99
+        },
+        {
+            "nome": "Ipiranga Rod. Pinheiros (Vila Madalena)",
+            "cidade": "São Paulo (Vila Madalena - R. Paracuê)",
+            "distancia_km": 64,
+            "gasolina": 6.95,
+            "etanol": 5.1
+        },
+        {
+            "nome": "Posto BR (Litoral)",
+            "cidade": "Itanhaém",
+            "distancia_km": 85,
+            "gasolina": 6.89,
+            "etanol": 4.95
         }
     ]
 }
