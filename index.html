@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abastece Juquitiba</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white p-2 md:p-4">
+    <div id="root"></div>
+    <script type="text/babel">
+        function App() {
+            const [postos, setPostos] = React.useState([]);
+            const [atualizacao, setAtualizacao] = React.useState("");
+
+            React.useEffect(() => {
+                const puxarDados = async () => {
+                    try {
+                        const url = `https://raw.githubusercontent.com/vallarus-true/Combustiveis/main/precos_juquitiba.json?t=${new Date().getTime()}`;
+                        const resposta = await fetch(url);
+                        if (!resposta.ok) throw new Error('Falha na rede');
+                        const dados = await resposta.json();
+                        setPostos(dados.postos);
+                        setAtualizacao(dados.ultima_atualizacao);
+                    } catch (erro) {
+                        console.error("Erro:", erro);
+                    }
+                };
+                puxarDados();
+            }, []);
+
+            return (
+                <div class="max-w-md mx-auto bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700 mt-4">
+                    <div class="bg-green-600 p-4 text-center">
+                        <h1 class="text-2xl font-bold">Abastece Juquitiba</h1>
+                        <p class="text-sm opacity-90 mt-1">Modo Mille 2008 (71% Paridade)</p>
+                    </div>
+                    
+                    <div class="p-4">
+                        {postos.length === 0 ? (
+                            <p class="text-center text-gray-400">Carregando dados do robô...</p>
+                        ) : (
+                            postos.map((posto, index) => {
+                                const tetoEtanol = (posto.gasolina * 0.71).toFixed(2);
+                                const compensaEtanol = posto.etanol <= tetoEtanol;
+                                
+                                return (
+                                    <div key={index} class="mb-4 bg-gray-700 p-3 rounded-lg border border-gray-600">
+                                        <h2 class="text-xl font-bold text-yellow-400 mb-2">{posto.nome}</h2>
+                                        <div class="flex justify-between mb-1">
+                                            <span>Gasolina:</span> <span class="font-bold">R$ {posto.gasolina.toFixed(2)}</span>
+                                        </div>
+                                        <div class="flex justify-between mb-2">
+                                            <span>Etanol:</span> <span class="font-bold">R$ {posto.etanol.toFixed(2)}</span>
+                                        </div>
+                                        <div class={`p-2 rounded mt-2 text-center font-bold ${compensaEtanol ? 'bg-green-700 text-white' : 'bg-red-900 text-red-200'}`}>
+                                            {compensaEtanol ? 'VANTAGEM: ETANOL' : 'VANTAGEM: GASOLINA'}
+                                            <div class="text-xs font-normal mt-1">Teto matemático do Etanol aqui: R$ {tetoEtanol}</div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                        <p class="text-center text-xs text-gray-500 mt-4">Última leitura: {atualizacao}</p>
+                    </div>
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
