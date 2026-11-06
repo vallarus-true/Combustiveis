@@ -1,0 +1,36 @@
+name: Robô Diário de Preços
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  executar_robo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Pegar os arquivos do projeto
+        uses: actions/checkout@v4
+
+      - name: Instalar o Python no computador virtual
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar ferramentas do robo
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Ligar o Robo
+        run: python robo_raspador.py
+
+      - name: Salvar preco e publicar
+        run: |
+          git config --local user.email "robo@abastecejuquitiba.com"
+          git config --local user.name "Robo de Precos"
+          git add precos_juquitiba.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Atualizacao de precos [Automático]"
+          git push
